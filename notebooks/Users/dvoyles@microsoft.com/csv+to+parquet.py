@@ -17,8 +17,6 @@ mountPoint = "/mnt/blobmount"
 loadPath   = "/example/data/users.csv"
 savePath   = "/example/data/users/incremental"
 
-# COMMAND ----------
-
 # Mount blob storage
 # If already mounted, will throw an exception
 try:
@@ -39,7 +37,7 @@ Paramters:
   -sFilePath(--string): In this format: 'csv/userdata1.csv'
   
 Returns: 
-  csvFile: in the form of spark.read.csv
+  pyspark.sql.dataframe.DataFrame
 """
 def readAndShowCSV(sFilePath):
   csvFile = spark.read.csv(mountPoint+loadPath+'/' + sFilePath, header=True, inferSchema=True)
@@ -56,17 +54,13 @@ Parameters:
   -sDate (--string): In this format: '31-03-2020_19-08'
   
 Returns:
-  spark.read.parquet object
+  pyspark.sql.dataframe.DataFrame
 """
 def readIncrementalParquetFile(sDate): 
   parquetFile = spark.read.parquet(mountPoint + savePath + '/' + sDate + '.parquet')
   parquetFile.show(5)
   
   return parquetFile
-
-# COMMAND ----------
-
-
 
 # COMMAND ----------
 
