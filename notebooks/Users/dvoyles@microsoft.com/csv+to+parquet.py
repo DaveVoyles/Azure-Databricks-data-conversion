@@ -138,13 +138,14 @@ parquetFile.filter(parquetFile.registration_dttm =="2016-02-03").count()
 
 # COMMAND ----------
 
-# Converts Dataframe into a list (to_timestamp)
+# Converts Dataframe into a list
 from pyspark.sql.functions import to_timestamp
 
     #    df.select(to_timestamp(df.t                                                ).alias('dt')).collect()
     #    df.select(to_timestamp(df.t,                          'yyyy-MM-dd HH:mm:ss').alias('dt')).collect()
-to_timestamp =  parquetFile.select(to_timestamp(parquetFile.registration_dttm, 'yyyy-MM-dd HH:mm:ss').alias('dt')).collect()
-to_timestamp
+dates_as_list =  parquetFile.select(to_timestamp(parquetFile.registration_dttm, 'yyyy-MM-dd HH:mm:ss').alias('dt')).collect()
+for elem in dates_as_list:
+     print (elem)
 
 # COMMAND ----------
 
@@ -152,36 +153,21 @@ parquetFile
 
 # COMMAND ----------
 
-# Beginning & end dates
-start_date = "2016-02-03"
-end_date   = "2016-02-04"
-
-# Filtered dates
-after_start_date  = parquetFile["registration_dttm"] >= start_date
-before_end_date   = parquetFile["registration_dttm"] <= end_date
-between_two_dates = after_start_date & before_end_date
-
 import pyspark.sql.functions as func
 from pyspark.sql import SQLContext
 import datetime, time 
 
+# NOTE: This data set all occurs on the same day, so you must filter by HOUR
+start_date = "2016-02-03 00:00:00"
+end_date   = "2016-02-03 23:59:59"
+
+# Filtered dates
+after_start_date  = parquetFile["registration_dttm"] >= start_date
+before_end_date   = parquetFile["registration_dttm"] <= end_date
+between_two_dates = after_start_date & before_end_date # returns a column
+
 # COMMAND ----------
 
-parquetFilecopy = parquetFile
-
-# COMMAND ----------
-
-to_timestamp.withColumn("hour",   hour  (col("parquetFilecopy"))).withColumn("minute", minute(col("parquetFilecopy"))).withColumn("second", second(col("parquetFilecopy"))).show(false)
-
-# COMMAND ----------
-
-# parquetFile.filter(parquetFile.registration_dttm.between( ("2016-02-03"))
-
-
-#todate = parquetFile.select(func.to_date(parquetFile.registration_dttm).alias("time"))
-#sf = todate.filter(todate.time > date_from).filter(todate.time < date_to)
-
-dates = ("2016-02-03",  "2016-02-04")
-date_from, date_to = [to_date(lit(s)).cast(TimestampType()) for s in dates]
-
-parquetFile.where((sf.my_col > date_from) & (sf.my_col < date_to))
+# Filter & return rows between the start & end date
+df1 = parquetFile.filter(parquetFile["registration_dttm"] >= func.lit(start_date)) \
+                 .filter(parquetFile["registration_dttm"] <= func.lit(end_date  )).show()
