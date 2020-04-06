@@ -17,15 +17,14 @@ mountPoint = "/mnt/blobmount"
 loadPath   = "/example/data/users.csv"
 savePath   = "/example/data/users/incremental"
 
-# Mount blob storage
-# If already mounted, will throw an exception
-try:
+# Check if blob storage is already mounted. If not, mount.
+if mountPoint in [mp.mountPoint for mp in dbutils.fs.mounts()]:
+    print(mountPoint + " exists!")
+else:
   dbutils.fs.mount(
   source        = "wasbs://dv-hdinsight-2020-03-30t16-29-59-717z@dvhdinsighthdistorage.blob.core.windows.net",
   mount_point   = mountPoint,
   extra_configs = {"fs.azure.account.key.dvhdinsighthdistorage.blob.core.windows.net":dbutils.secrets.get(scope = "dv-db-blob-scope-name", key = "dv-db-blob-secret")})
-except:
-    print('requirement failed: Directory already mounted: /mnt/blobmount;')
 
 # COMMAND ----------
 
