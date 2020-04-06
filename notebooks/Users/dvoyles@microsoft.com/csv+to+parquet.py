@@ -148,6 +148,10 @@ to_timestamp
 
 # COMMAND ----------
 
+#Beginning & end dates
+start_date = "2016-02-03"
+end_date   = "2016-02-04"
+
 # Filtered dates
 after_start_date  = parquetFile["registration_dttm"] >= start_date
 before_end_date   = parquetFile["registration_dttm"] <= end_date
