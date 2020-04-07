@@ -1,4 +1,22 @@
 # Databricks notebook source
+# DBTITLE 1,Instructions
+# GOAL: Incremental loading of parquet files
+#	1) Take something that has "date time" and run a filter that filters to one day at a time.
+#   2) Then add that data to an existing parquet data set.
+
+# Steps:
+
+#  1) Mount to Azure blob storage -- allows us to read/write. Mount point is: "/mnt/blobmount"
+#  2) Read .csv from from "/mnt/blobmount/example/data/users.csv"
+#  3) Write .csv file back to blob as parquet OR csv (in this example, parquet) to "/example/data/users/incremental" folder.
+#      NOTE: We are appending the current date, up to the minute, to prevent overwriting the existing parquet file
+#  4) Read back parquet file as data frame
+#  5) Filter df by between a start & end date
+#      NOTE: All transactions occur on the same day, so we filter by HOUR here ('03') to give us fewer results
+#  6) Append newly filtered DF to existing parquet file
+
+# COMMAND ----------
+
 # Can name this whatever you like, but first folder MUST be '/mnt'
 mountPoint = "/mnt/blobmount"
 
@@ -16,6 +34,9 @@ sParquetPath = "02-04-2020_18-53"
 
 # Date we are going to filter the parquet file by
 sRegistration_dttm = "2016-02-03"
+
+# /mnt/blobmount/example/data/users/incremental/02-04-2020_18-53.parquet
+parquetAppendPath = mountPoint + savePath + "/" + sParquetPath + ".parquet"
 
 # COMMAND ----------
 
@@ -113,44 +134,13 @@ csvFile = readAndShowCSV(sCSVPath)
 
 # COMMAND ----------
 
-# Write csv file back to blob as parquet
-writeParquetToStorage('csv')
+# Write csv file back to blob as parquet OR csv
+writeParquetToStorage('parquet')
 
 # COMMAND ----------
 
 # Read back the parquet file we just converted from csv -> parquet & stored in blob
 parquetFile = readIncrementalParquetFile(sParquetPath)
-
-# COMMAND ----------
-
-# How many distinct registration dates are there? If more than 1, Filter by that.
-parquetFile.select("registration_dttm").distinct().count()
-
-# COMMAND ----------
-
-parquetFile.filter(parquetFile.registration_dttm == sRegistration_dttm).count()
-
-# COMMAND ----------
-
-"""
-Converts Dataframe into a list
-
-Parameters:
-  -df (--string): Dataframe to be converted
-  
-Returns:
-     EX: Row(dt=datetime.datetime(2016, 2, 3, 7, 55, 29))
-"""
-def convertDfColToList(df):
-  from pyspark.sql.functions import to_timestamp
-
-      #   df.select(to_timestamp(df.t                                                ).alias('dt')).collect()
-      #   df.select(to_timestamp(df.t,                          'yyyy-MM-dd HH:mm:ss').alias('dt')).collect()
-  dates_as_list =  df.select(to_timestamp(df.registration_dttm, 'yyyy-MM-dd HH:mm:ss').alias('dt')).collect()
-  for elem in dates_as_list:
-       print (elem)
-      
-convertDfColToList(parquetFile)
 
 # COMMAND ----------
 
@@ -182,14 +172,9 @@ def FilterByDates(sEndHour):
                           .filter(parquetFile["registration_dttm"] <= func.lit(end_date  ))
   
   print(filteredDF)
-  
   filteredDF.show()
   
   return filteredDF
-
-# COMMAND ----------
-
-FilterByDates("03")
 
 # COMMAND ----------
 
@@ -199,12 +184,29 @@ dfFiltered = FilterByDates("03")
 
 # Append mode means that when saving a DataFrame to a data source, if data/table already exists, contents of the DataFrame are expected to be appended to existing data.
 # https://stackoverflow.com/questions/39234391/how-to-append-data-to-an-existing-parquet-file
-parquetAppendPath = mountPoint + savePath + "/" + sParquetPath + ".parquet"
-print(parquetAppendPath)
+dfFiltered.write.mode('append').parquet(parquetAppendPath)
 
 # COMMAND ----------
 
-dfFiltered.write.mode('append').parquet(parquetAppendPath)
+"""
+Converts Dataframe into a list
+
+Parameters:
+  -df (--string): Dataframe to be converted
+  
+Returns:
+     EX: Row(dt=datetime.datetime(2016, 2, 3, 7, 55, 29))
+"""
+def convertDfColToList(df):
+  from pyspark.sql.functions import to_timestamp
+
+      #   df.select(to_timestamp(df.t                                                ).alias('dt')).collect()
+      #   df.select(to_timestamp(df.t,                          'yyyy-MM-dd HH:mm:ss').alias('dt')).collect()
+  dates_as_list =  df.select(to_timestamp(df.registration_dttm, 'yyyy-MM-dd HH:mm:ss').alias('dt')).collect()
+  for elem in dates_as_list:
+       print (elem)
+      
+convertDfColToList(parquetFile)
 
 # COMMAND ----------
 
