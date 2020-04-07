@@ -169,8 +169,8 @@ def FilterByDates(sEndHour):
   import datetime, time 
 
   # NOTE: This data set all occurs on the same day, so you must filter by HOUR
-  start_date = "2016-02-03      00      :00:00"
-  end_date   = "2016-02-03" +sEndHour+ ":59:59"
+  start_date = "2016-02-03           00:00:00"
+  end_date   = "2016-02-03 "+sEndHour+":59:59"
 
   # Filtered dates
   after_start_date  = parquetFile["registration_dttm"] >= start_date
@@ -183,7 +183,7 @@ def FilterByDates(sEndHour):
   
   return filteredDF
 
-FilterByDates("24")
+FilterByDates("03")
 
 # COMMAND ----------
 
@@ -217,4 +217,4 @@ parquetFile.show()
 
 # Append mode means that when saving a DataFrame to a data source, if data/table already exists, contents of the DataFrame are expected to be appended to existing data.
 # https://stackoverflow.com/questions/39234391/how-to-append-data-to-an-existing-parquet-file
-parquetFile.write.mode('append').parquet('parquet_data_file')
+parquetFile.write.mode('append').parquet(dateTimePath)
