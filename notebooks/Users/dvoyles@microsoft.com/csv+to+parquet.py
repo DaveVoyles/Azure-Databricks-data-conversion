@@ -201,6 +201,7 @@ dfFiltered.write.mode('append').parquet(parquetAppendPath)
 
 # COMMAND ----------
 
+# NOT USED. I wanted to conver the time stamps to a list, thinking it would be easier to filter. 
 """
 Converts Dataframe into a list
 
@@ -223,11 +224,12 @@ convertDfColToList(parquetFile)
 
 # COMMAND ----------
 
+# Trying to understand each column type to see if it was possible to add a new row. They all return type: string
 parquetFile.describe()
 
 # COMMAND ----------
 
-# add new row to data frame
+# NOT USED. Add new row to data frame
 # https://stackoverflow.com/questions/47556025/pyspark-add-new-row-to-dataframe/47556546
 newRow = spark.createDataFrame([ 
   "2016-02-03 00:00:01",
