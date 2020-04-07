@@ -1,9 +1,11 @@
-# Azure-Databricks-data-conversion
+# Incremental loading of parquet files in Azure Databricks with blob storage
+
 ## For manipulating data and learning ADB. Mostly .csv &amp; parquet work
 
 #### AUTHOR: Dave Voyles | Microsoft | April-2020 | https://github.com/DaveVoyles/Azure-Databricks-data-conversion
 
-## GOAL: Incremental loading of parquet files
+---
+### GOAL: Incremental loading of parquet files
 
   1) Take something that has "date time" and run a filter that filters to one day at a time.
   2) Then add that data to an existing parquet data set.
@@ -20,6 +22,7 @@
  NOTE: All transactions occur on the same day, so we filter by HOUR here ('03') to give us fewer results
  6) Append newly filtered DF to existing parquet file
  
+ ---
 ## Conclusion
    We have seen that it is very easy to add data to an existing Parquet file. This works very well when you’re adding data - as opposed to updating or deleting existing records - to a cold data store (Amazon S3, for instance). 
 
