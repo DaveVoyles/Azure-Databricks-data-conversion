@@ -1,6 +1,6 @@
 # Incremental loading of parquet files in Azure Databricks with blob storage
 
-## For manipulating data and learning ADB. Mostly .csv &amp; parquet work
+### For manipulating data and learning ADB. Mostly .csv &amp; parquet work
 
 #### AUTHOR: Dave Voyles | Microsoft | April-2020 | https://github.com/DaveVoyles/Azure-Databricks-data-conversion
 
