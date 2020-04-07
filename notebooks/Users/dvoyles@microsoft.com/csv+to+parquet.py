@@ -179,11 +179,32 @@ def FilterByDates(sEndHour):
 
   # Filter & return rows between the start & end date
   filteredDF = parquetFile.filter(parquetFile["registration_dttm"] >= func.lit(start_date)) \
-                          .filter(parquetFile["registration_dttm"] <= func.lit(end_date  )).show()
+                          .filter(parquetFile["registration_dttm"] <= func.lit(end_date  ))
+  
+  print(filteredDF)
+  
+  filteredDF.show()
   
   return filteredDF
 
+# COMMAND ----------
+
 FilterByDates("03")
+
+# COMMAND ----------
+
+dfFiltered = FilterByDates("03")
+
+# COMMAND ----------
+
+# Append mode means that when saving a DataFrame to a data source, if data/table already exists, contents of the DataFrame are expected to be appended to existing data.
+# https://stackoverflow.com/questions/39234391/how-to-append-data-to-an-existing-parquet-file
+parquetAppendPath = mountPoint + savePath + "/" + sParquetPath + ".parquet"
+print(parquetAppendPath)
+
+# COMMAND ----------
+
+dfFiltered.write.mode('append').parquet(parquetAppendPath)
 
 # COMMAND ----------
 
@@ -212,9 +233,3 @@ newRow = spark.createDataFrame([
 # TypeError: Can not infer schema for type: <class 'str'>
 parquetFile.union(newRow)
 parquetFile.show()
-
-# COMMAND ----------
-
-# Append mode means that when saving a DataFrame to a data source, if data/table already exists, contents of the DataFrame are expected to be appended to existing data.
-# https://stackoverflow.com/questions/39234391/how-to-append-data-to-an-existing-parquet-file
-parquetFile.write.mode('append').parquet(dateTimePath)
