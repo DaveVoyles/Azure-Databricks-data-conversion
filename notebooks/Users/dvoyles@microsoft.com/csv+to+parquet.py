@@ -1,7 +1,23 @@
 # Databricks notebook source
+# Can name this whatever you like, but first folder MUST be '/mnt'
 mountPoint = "/mnt/blobmount"
+
+# Loading data from .csv source for this example
 loadPath   = "/example/data/users.csv"
+
+# Saving all data into the 'incremental' folder 
 savePath   = "/example/data/users/incremental"
+
+# .csv file we'll be reading from
+sCSVPath = 'csv/userdata1.csv'
+
+# We'll use this to append to the current parquet file we are working from
+sParquetPath = "02-04-2020_18-53"
+
+# Date we are going to filter the parquet file by
+sRegistration_dttm = "2016-02-03"
+
+# COMMAND ----------
 
 # Check if blob storage is already mounted. If not, mount.
 if mountPoint in [mp.mountPoint for mp in dbutils.fs.mounts()]:
@@ -93,7 +109,7 @@ def writeParquetToStorage(string_sourceType):
 # COMMAND ----------
 
 # ReadCSV file in blob
-csvFile = readAndShowCSV('csv/userdata1.csv')
+csvFile = readAndShowCSV(sCSVPath)
 
 # COMMAND ----------
 
@@ -103,7 +119,7 @@ writeParquetToStorage('csv')
 # COMMAND ----------
 
 # Read back the parquet file we just converted from csv -> parquet & stored in blob
-parquetFile = readIncrementalParquetFile('02-04-2020_18-53')
+parquetFile = readIncrementalParquetFile(sParquetPath)
 
 # COMMAND ----------
 
@@ -112,7 +128,7 @@ parquetFile.select("registration_dttm").distinct().count()
 
 # COMMAND ----------
 
-parquetFile.filter(parquetFile.registration_dttm =="2016-02-03").count()
+parquetFile.filter(parquetFile.registration_dttm == sRegistration_dttm).count()
 
 # COMMAND ----------
 
@@ -128,8 +144,8 @@ Returns:
 def convertDfColToList(df):
   from pyspark.sql.functions import to_timestamp
 
-      #    df.select(to_timestamp(df.t                                                ).alias('dt')).collect()
-      #    df.select(to_timestamp(df.t,                          'yyyy-MM-dd HH:mm:ss').alias('dt')).collect()
+      #   df.select(to_timestamp(df.t                                                ).alias('dt')).collect()
+      #   df.select(to_timestamp(df.t,                          'yyyy-MM-dd HH:mm:ss').alias('dt')).collect()
   dates_as_list =  df.select(to_timestamp(df.registration_dttm, 'yyyy-MM-dd HH:mm:ss').alias('dt')).collect()
   for elem in dates_as_list:
        print (elem)
@@ -138,19 +154,67 @@ convertDfColToList(parquetFile)
 
 # COMMAND ----------
 
-import pyspark.sql.functions as func
-from pyspark.sql import SQLContext
-import datetime, time 
+"""
+Filters current dataframe to only return values between start & end dates
 
-# NOTE: This data set all occurs on the same day, so you must filter by HOUR
-start_date = "2016-02-03 00:00:00"
-end_date   = "2016-02-03 23:59:59"
+Parameters:
+  -sEndHour (--string): 24-hour format. Which hour should we end on?  EX: "23" for 11pm
+  
+Returns:
+     DataFrame filtered between the selected dates (hours)
+"""
+def FilterByDates(sEndHour):
+  import pyspark.sql.functions as func
+  from pyspark.sql import SQLContext
+  import datetime, time 
 
-# Filtered dates
-after_start_date  = parquetFile["registration_dttm"] >= start_date
-before_end_date   = parquetFile["registration_dttm"] <= end_date
-between_two_dates = after_start_date & before_end_date # returns a column
+  # NOTE: This data set all occurs on the same day, so you must filter by HOUR
+  start_date = "2016-02-03      00      :00:00"
+  end_date   = "2016-02-03" +sEndHour+ ":59:59"
 
-# Filter & return rows between the start & end date
-filteredDF = parquetFile.filter(parquetFile["registration_dttm"] >= func.lit(start_date)) \
-                        .filter(parquetFile["registration_dttm"] <= func.lit(end_date  )).show()
+  # Filtered dates
+  after_start_date  = parquetFile["registration_dttm"] >= start_date
+  before_end_date   = parquetFile["registration_dttm"] <= end_date
+  between_two_dates = after_start_date & before_end_date # returns a column
+
+  # Filter & return rows between the start & end date
+  filteredDF = parquetFile.filter(parquetFile["registration_dttm"] >= func.lit(start_date)) \
+                          .filter(parquetFile["registration_dttm"] <= func.lit(end_date  )).show()
+  
+  return filteredDF
+
+FilterByDates("24")
+
+# COMMAND ----------
+
+parquetFile.describe()
+
+# COMMAND ----------
+
+# add new row to data frame
+# https://stackoverflow.com/questions/47556025/pyspark-add-new-row-to-dataframe/47556546
+newRow = spark.createDataFrame([ 
+  "2016-02-03 00:00:01",
+  "1",
+  "Dave",
+  "Voyles",
+  "davevoyles@mail.com",
+  "Male",
+  "1.197.201.2",
+  "6759521864920116",
+  "United States",
+  "3/8/1900",
+  "100000.00",
+  "Programmer",
+  "null",
+  "test"
+])
+# TypeError: Can not infer schema for type: <class 'str'>
+parquetFile.union(newRow)
+parquetFile.show()
+
+# COMMAND ----------
+
+# Append mode means that when saving a DataFrame to a data source, if data/table already exists, contents of the DataFrame are expected to be appended to existing data.
+# https://stackoverflow.com/questions/39234391/how-to-append-data-to-an-existing-parquet-file
+parquetFile.write.mode('append').parquet('parquet_data_file')
