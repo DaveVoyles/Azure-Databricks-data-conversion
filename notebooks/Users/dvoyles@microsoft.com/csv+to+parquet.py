@@ -136,7 +136,7 @@ def writeParquetToStorage(string_sourceType):
     dateTimePath = createDateTimePath()
     
     if string_sourceType == 'parquet':
-        parquetFile.write.parquet(dateTimePath)
+        csvFile.write.parquet(dateTimePath)
     elif string_sourceType =='csv':
         csvFile.write.csv(dateTimePath)
 
