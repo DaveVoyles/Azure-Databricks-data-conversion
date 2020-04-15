@@ -64,6 +64,8 @@ else:
 
 # COMMAND ----------
 
+# import testmod for testing our function 
+from doctest import testmod 
 """
 Reads data from '/mnt/blobmount/example/data/users.csv' folder
 TODO: Allow this to read parquet as well
@@ -74,7 +76,7 @@ Paramters:
 Returns: 
   pyspark.sql.dataframe.DataFrame
 """
-def readAndShowCSV(sFilePath):
+def readAndShowCSV(sFilePath = 'users.csv/users' ):
   csvFile = spark.read.csv(mountPoint+loadPath+'/' + sFilePath, header=True, inferSchema=True)
   csvFile.show(5)
   
@@ -198,55 +200,3 @@ dfFiltered = FilterByDates("03")
 # Append mode means that when saving a DataFrame to a data source, if data/table already exists, contents of the DataFrame are expected to be appended to existing data.
 # https://stackoverflow.com/questions/39234391/how-to-append-data-to-an-existing-parquet-file
 dfFiltered.write.mode('append').parquet(parquetAppendPath)
-
-# COMMAND ----------
-
-# NOT USED. I wanted to conver the time stamps to a list, thinking it would be easier to filter. 
-"""
-Converts Dataframe into a list
-
-Parameters:
-  -df (--string): Dataframe to be converted
-  
-Returns:
-     EX: Row(dt=datetime.datetime(2016, 2, 3, 7, 55, 29))
-"""
-def convertDfColToList(df):
-  from pyspark.sql.functions import to_timestamp
-
-      #   df.select(to_timestamp(df.t                                                ).alias('dt')).collect()
-      #   df.select(to_timestamp(df.t,                          'yyyy-MM-dd HH:mm:ss').alias('dt')).collect()
-  dates_as_list =  df.select(to_timestamp(df.registration_dttm, 'yyyy-MM-dd HH:mm:ss').alias('dt')).collect()
-  for elem in dates_as_list:
-       print (elem)
-      
-convertDfColToList(parquetFile)
-
-# COMMAND ----------
-
-# Trying to understand each column type to see if it was possible to add a new row. They all return type: string
-parquetFile.describe()
-
-# COMMAND ----------
-
-# NOT USED. Add new row to data frame
-# https://stackoverflow.com/questions/47556025/pyspark-add-new-row-to-dataframe/47556546
-newRow = spark.createDataFrame([ 
-  "2016-02-03 00:00:01",
-  "1",
-  "Dave",
-  "Voyles",
-  "davevoyles@mail.com",
-  "Male",
-  "1.197.201.2",
-  "6759521864920116",
-  "United States",
-  "3/8/1900",
-  "100000.00",
-  "Programmer",
-  "null",
-  "test"
-])
-# TypeError: Can not infer schema for type: <class 'str'>
-parquetFile.union(newRow)
-parquetFile.show()
