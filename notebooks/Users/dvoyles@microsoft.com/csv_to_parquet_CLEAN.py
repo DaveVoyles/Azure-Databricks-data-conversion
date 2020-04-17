@@ -53,7 +53,6 @@ def readIncrementalParquetFile(sDate):
   return parquetFile
 
 
-  
 def createTimeStamp(): 
     from datetime import datetime
 
@@ -113,7 +112,7 @@ Parameters:
 Returns:
      DataFrame filtered between the selected dates (hours)
 """
-def FilterByDates(sEndHour):
+def FilterByDates(sEndHour = "03", _partquetFile = parquetFile):
   import pyspark.sql.functions as func
   from pyspark.sql import SQLContext
   import datetime, time 
@@ -123,13 +122,13 @@ def FilterByDates(sEndHour):
   end_date   = "2016-02-03 "+sEndHour+":59:59"
 
   # Filtered dates
-  after_start_date  = parquetFile["registration_dttm"] >= start_date
-  before_end_date   = parquetFile["registration_dttm"] <= end_date
+  after_start_date  = _parquetFile["registration_dttm"] >= start_date
+  before_end_date   = _parquetFile["registration_dttm"] <= end_date
   between_two_dates = after_start_date & before_end_date # returns a column
 
   # Filter & return rows between the start & end date
-  filteredDF = parquetFile.filter(parquetFile["registration_dttm"] >= func.lit(start_date)) \
-                          .filter(parquetFile["registration_dttm"] <= func.lit(end_date  ))
+  filteredDF = _parquetFile.filter(_parquetFile["registration_dttm"] >= func.lit(start_date)) \
+                           .filter(_parquetFile["registration_dttm"] <= func.lit(end_date  ))
   
   print(filteredDF)
   filteredDF.show()

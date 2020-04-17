@@ -36,10 +36,6 @@ class TestParquet(unittest.TestCase):
      ######## TESTED METHODS ########
     def test_readAndShowCSV(self):
         with databricks_test.session() as dbrickstest:
-          # csvFile = readAndShowCSV(test_data_file_path)
-          # Read CSV 
-          # myCSV = pd.read_csv(test_data_file_path)
-          # print(myCSV)
 
           from pandas.testing import assert_frame_equal
 
@@ -93,7 +89,6 @@ class TestParquet(unittest.TestCase):
               "Structural Engineer",
               "null"
             ] 
-
                    
             # Provide input and output location as widgets to notebook
             switch = {
@@ -125,4 +120,3 @@ class TestParquet(unittest.TestCase):
 # Will run all of our tests
 if __name__ == '__main__':
     unittest.main()
-
