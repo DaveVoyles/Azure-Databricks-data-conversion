@@ -71,6 +71,7 @@ else:
 
 # COMMAND ----------
 
+# Name | Default Val | Label
 dbutils.widgets.text("input", "","") 
 dbutils.widgets.get("input")
 
