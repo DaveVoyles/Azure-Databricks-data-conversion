@@ -71,6 +71,7 @@ else:
 
 # COMMAND ----------
 
+# Tutorial on how widgets work: https://www.youtube.com/watch?v=vRvnQLnJHjo
 # Name | Default Val | Label
 dbutils.widgets.text("input", "","") 
 dbutils.widgets.get("input")
@@ -81,12 +82,24 @@ dbutils.widgets.get("output")
 dbutils.widgets.text("filename", "","") 
 dbutils.widgets.get("filename")
 
+dbutils.widgets.text("x_val", "01","") 
+x_val_string = dbutils.widgets.get("x_val")
+x_val        = int(x_val_string)
+
+dbutils.widgets.text("y_val", "03","") 
+y_val_string = dbutils.widgets.get("y_val")
+y_val        = int(y_val_string)
+
 # COMMAND ----------
 
-def add(x = 1, y = 2)
+# Sample function to determine whether widgets are working or not
+def add(x = x_val, y = y_val):
   value = x + y
   
+  print (value)
   return value
+
+add()
 
 # COMMAND ----------
 
