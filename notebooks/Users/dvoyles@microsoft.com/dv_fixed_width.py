@@ -2,11 +2,13 @@
 # Data sample acquired from: http://dailydoseofexcel.com/archives/2013/04/12/sample-fixed-width-text-file/
 
 # Name | Default Val | Label
-dbutils.widgets.text("input", "","") 
-dbutils.widgets.get("input")
+dbutils.widgets.text("input_path", "","") 
+my_input = dbutils.widgets.get("input_path")
+print(my_input)
 
-dbutils.widgets.text("output", "","") 
-dbutils.widgets.get("output")
+dbutils.widgets.text("output_path", "","") 
+my_output = dbutils.widgets.get("output_path")
+print(my_output)
 
 dbutils.widgets.text("filename", "","") 
 dbutils.widgets.get("filename")
