@@ -10,6 +10,9 @@ if 'dbutils' not in locals():
 # Check if blob storage is already mounted. If not, mount.
 # Using -- AZURE KEY VAULT -- here, by authenticating Databricks w/ Key vault once
 
+# Root of our blob storage container. First folder --MUST-- be '/mnt'
+mountPoint = "/mnt/blobmount"
+
 # INSTRUCTIONS: https://docs.microsoft.com/en-us/azure/databricks/security/secrets/secret-scopes
 if mountPoint in [mp.mountPoint for mp in dbutils.fs.mounts()]:
     print(mountPoint + " exists!")
@@ -22,22 +25,26 @@ else:
 # COMMAND ----------
 
 # Data sample acquired from: http://dailydoseofexcel.com/archives/2013/04/12/sample-fixed-width-text-file/
+# Parameters we are passing in and/or returning from this notebook
+# NAME| DEFAULT VALUE | LABEL
 
-# Name | Default Val | Label
 dbutils.widgets.text("blob_input", "","") 
 my_input = dbutils.widgets.get("blob_input")
-print(my_input)
+print(my_input) # Debug
 
 dbutils.widgets.text("blob_output", "","") 
 my_output = dbutils.widgets.get("blob_output")
-print(my_output)
+print(my_output) # Debug
 
 dbutils.widgets.text("filename", "","") 
 dbutils.widgets.get("filename")
 
 # COMMAND ----------
 
-df = spark.read.text(my_input).show()
+# Read fixed-width text file from blob storage
+fixed_width_path = mountPoint + my_input
+
+df = spark.read.text(fixed_width_path).show()
 df(print)
 
 # COMMAND ----------
