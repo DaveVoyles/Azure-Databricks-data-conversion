@@ -7,45 +7,70 @@ if 'dbutils' not in locals():
 
 # COMMAND ----------
 
-# Check if blob storage is already mounted. If not, mount.
-# Using -- AZURE KEY VAULT -- here, by authenticating Databricks w/ Key vault once
-
-# Root of our blob storage container. First folder --MUST-- be '/mnt'
-mountPoint = "/mnt/blobmount"
-
-# INSTRUCTIONS: https://docs.microsoft.com/en-us/azure/databricks/security/secrets/secret-scopes
-if mountPoint in [mp.mountPoint for mp in dbutils.fs.mounts()]:
-    print(mountPoint + " exists!")
-else:
-  dbutils.fs.mount(
-  source        = "wasbs://dv-hdinsight-2020-03-30t16-29-59-717z@dvhdinsighthdistorage.blob.core.windows.net",
-  mount_point   = mountPoint,
-  extra_configs = {"fs.azure.account.key.dvhdinsighthdistorage.blob.core.windows.net":dbutils.secrets.get(scope = "dv-db-blob-scope-name", key = "dv-db-blob-secret")})
-
-# COMMAND ----------
-
 # Data sample acquired from: http://dailydoseofexcel.com/archives/2013/04/12/sample-fixed-width-text-file/
 # Parameters we are passing in and/or returning from this notebook
 # NAME| DEFAULT VALUE | LABEL
 
-dbutils.widgets.text("blob_input", "","") 
-my_input = dbutils.widgets.get("blob_input")
-print(my_input) # Debug
+dbutils.widgets.text("input", "","") 
+dbutils.widgets.get("input")
 
-dbutils.widgets.text("blob_output", "","") 
-my_output = dbutils.widgets.get("blob_output")
-print(my_output) # Debug
+dbutils.widgets.text("output", "","") 
+dbutils.widgets.get("output")
 
 dbutils.widgets.text("filename", "","") 
 dbutils.widgets.get("filename")
 
+dbutils.widgets.text("pipelineRunId", "","") 
+dbutils.widgets.get("pipelineRunId")
+
 # COMMAND ----------
 
-# Read fixed-width text file from blob storage
-fixed_width_path = mountPoint + my_input
+#Supply storageName and accessKey values
+storageName = "dvhdinsighthdistorage"
+accessKey = "tb7o3VJklVaQ56nw6uqvZAFGfpx89QuXO7JeYntHoN3Mf5Tp7x7k30rHr00SiSGeNkhkr80bvRHdfzUqttzfTQ=="
 
-df = spark.read.text(fixed_width_path).show()
-df(print)
+# Without this check, if directory is already mounted it will throw an error here.
+#if mount_point in [mp.mountPoint for mp in dbutils.fs.mounts()]:
+#    print(mount_pointt + " exists!")
+#else:
+
+# Unmount blob storage if it currently exists. 
+def sub_unmount(str_path):
+    if any(mount.mountPoint == str_path for mount in dbutils.fs.mounts()):
+        dbutils.fs.unmount(str_path)
+
+sub_unmount('/mnt/adfdata')
+
+try:
+  dbutils.fs.mount(
+    source = "wasbs://sinkdata@"+storageName+".blob.core.windows.net/",
+    mount_point = "/mnt/adfdata",
+    extra_configs = {"fs.azure.account.key."+storageName+".blob.core.windows.net":
+                     accessKey})
+except Exception as e:
+  # The error message has a long stack trace.  This code tries to print just the relevent line indicating what failed.
+  import re
+  result = re.findall(r"^\s*Caused by:\s*\S+:\s*(.*)$", e.message, flags=re.MULTILINE)
+  if result:
+    print (result[-1]) # Print only the relevant error message
+  else:
+    print (e) # Otherwise print the whole stack trace.
+
+# COMMAND ----------
+
+# MAGIC %fs ls /mnt/adfdata
+
+# COMMAND ----------
+
+from pyspark.sql.functions import desc
+
+inputFile = "dbfs:/mnt/adfdata"+getArgument("input")+"/"+getArgument("filename")
+initialDF = (spark.read           # The DataFrameReader
+  .option("header", "true")       # Use first line of all files as header
+  .option("inferSchema", "true")  # Automatically infer data types
+  .text(fixed_width_path)         # Creates a DataFrame from Text after reading in the file
+)
+display(initialDF)
 
 # COMMAND ----------
 
