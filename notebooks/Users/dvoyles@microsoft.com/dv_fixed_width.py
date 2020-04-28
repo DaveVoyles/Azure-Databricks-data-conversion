@@ -25,11 +25,6 @@ dbutils.widgets.get("pipelineRunId")
 
 # COMMAND ----------
 
-# Supply storageName and accessKey values
-# You can also use Azure Key Vault to abstract this by connecting Key Vault -> Databricks
-storageName = "dvhdinsighthdistorage"
-accessKey    = "tb7o3VJklVaQ56nw6uqvZAFGfpx89QuXO7JeYntHoN3Mf5Tp7x7k30rHr00SiSGeNkhkr80bvRHdfzUqttzfTQ=="
-
 # Unmount blob storage if it currently exists. 
 # Without this, Databricks will throw an error each time you try to load data from storage
 def sub_unmount(str_path):
@@ -40,11 +35,11 @@ sub_unmount('/mnt/adfdata')
 
 # Mount blob storage to Databricks
 try:
-  dbutils.fs.mount(
-    source        = "wasbs://sinkdata@"+storageName+".blob.core.windows.net/",
-    mount_point   = "/mnt/adfdata",
-    extra_configs = {"fs.azure.account.key."+storageName+".blob.core.windows.net":
-                     accessKey})
+    dbutils.fs.mount(
+    source        = "wasbs://dv-hdinsight-2020-03-30t16-29-59-717z@dvhdinsighthdistorage.blob.core.windows.net",
+    mount_point   = "/mnt/adfdata"
+    extra_configs = {"fs.azure.account.key.dvhdinsighthdistorage.blob.core.windows.net":dbutils.secrets.get(scope = "dv-db-blob-scope-name",       key           = "dv-db-blob-secret")})
+  
 except Exception as e:
   # The error message has a long stack trace.  This code tries to print just the relevent line indicating what failed.
   import re
